@@ -1,11 +1,3 @@
-/**
- * 👋 Hey there!
- * This file is the starting point for your new WordPress/Gatsby site! 🚀
- * For more information about what this file is and does, see
- * https://www.gatsbyjs.com/docs/gatsby-config/
- *
- */
-
 module.exports = {
   /**
    * Adding plugins to this array adds them to your Gatsby site.
@@ -14,6 +6,19 @@ module.exports = {
    * If you need any more you can search here: https://www.gatsbyjs.com/plugins/
    */
   plugins: [
+    {
+      resolve: `gatsby-plugin-webfonts`,
+      options: {
+        fonts: {
+          google: [
+            {
+              family: "Montserrat",
+              variants: ["300", "400", "500", "600", "700"],
+            },
+          ],
+        },
+      },
+    },
     {
       /**
        * First up is the WordPress source plugin that connects Gatsby
@@ -25,13 +30,24 @@ module.exports = {
        */
       resolve: `gatsby-source-wordpress`,
       options: {
-        // the only required plugin option for WordPress is the GraphQL url.
-        url:
-          process.env.WPGRAPHQL_URL ||
-          `https://wpgatsbydemo.wpengine.com/graphql`,
+        url: process.env.WPGRAPHQL_URL || `httnpp://wpprueba.local/graphql`,
+        html: {
+          createStaticFiles: false,
+          useGatsbyImage: false,
+        },
+        type: {
+          MediaItem: { createFileNodes: false },
+        },
       },
     },
-
+    "gatsby-plugin-image",
+    "gatsby-transformer-sharp",
+    {
+      resolve: "gatsby-plugin-sharp",
+      options: {
+        failOnError: false,
+      },
+    },
     /**
      * We need this plugin so that it adds the "File.publicURL" to our site
      * It will allow us to access static url's for assets like PDF's
@@ -70,6 +86,7 @@ module.exports = {
 
     // See https://www.gatsbyjs.com/plugins/gatsby-plugin-react-helmet/?=gatsby-plugin-react-helmet
     `gatsby-plugin-react-helmet`,
+    `gatsby-plugin-postcss`,
 
     /**
      * this (optional) plugin enables Progressive Web App + Offline functionality

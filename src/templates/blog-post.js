@@ -8,12 +8,13 @@ import parse from "html-react-parser"
 // version used by the Gatsby and @wordpress packages that causes build
 // failures.
 // @todo update this once @wordpress upgrades their postcss version
-import "../css/@wordpress/block-library/build-style/style.css"
+//import "../css/@wordpress/block-library/build-style/style.css"
 import "../css/@wordpress/block-library/build-style/theme.css"
-
 import Bio from "../components/bio"
 import Layout from "../components/layout"
 import Seo from "../components/seo"
+import Header from "../components/layout/Header"
+import Footer from "../components/layout/Footer"
 
 const BlogPostTemplate = ({ data: { previous, next, post } }) => {
   const featuredImage = {
@@ -23,6 +24,7 @@ const BlogPostTemplate = ({ data: { previous, next, post } }) => {
 
   return (
     <Layout>
+      <Header/>
       <Seo title={post.title} description={post.excerpt} />
 
       <article
@@ -35,14 +37,7 @@ const BlogPostTemplate = ({ data: { previous, next, post } }) => {
 
           <p>{post.date}</p>
 
-          {/* if we have a featured image for this post let's display it */}
-          {featuredImage?.data && (
-            <GatsbyImage
-              image={featuredImage.data}
-              alt={featuredImage.alt}
-              style={{ marginBottom: 50 }}
-            />
-          )}
+      
         </header>
 
         {!!post.content && (
@@ -83,6 +78,7 @@ const BlogPostTemplate = ({ data: { previous, next, post } }) => {
           </li>
         </ul>
       </nav>
+      <Footer/>
     </Layout>
   )
 }

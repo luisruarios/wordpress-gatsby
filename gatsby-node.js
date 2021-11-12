@@ -1,6 +1,43 @@
 const path = require(`path`)
 const chunk = require(`lodash/chunk`)
 
+const postQuery = `
+query WpPosts {
+  # Query all WordPress blog posts sorted by date
+  allWpPost(sort: { fields: [date], order: DESC }) {
+    edges {
+      previous {
+        id
+      }
+
+      # note: this is a GraphQL alias. It renames "node" to "post" for this query
+      # We're doing this because this "node" is a post! It makes our code more readable further down the line.
+      post: node {
+        id
+        uri
+      }
+
+      next {
+        id
+      }
+    }
+  }
+}
+`
+const pageQuery = `
+query WpPages {
+  allWpPage {
+    edges {
+      node {
+        id
+        uri
+        slug
+      }
+    }
+  }
+}
+`
+
 // This is a simple debugging tool
 // dd() will prettily dump to the terminal and kill the process
 // const { dd } = require(`dumper.js`)
@@ -13,19 +50,40 @@ const chunk = require(`lodash/chunk`)
  */
 exports.createPages = async gatsbyUtilities => {
   // Query our posts from the GraphQL server
-  const posts = await getPosts(gatsbyUtilities)
-
-  // If there are no posts in WordPress, don't do anything
-  if (!posts.length) {
+  const posts = (await getResouce(gatsbyUtilities, postQuery)).allWpPost.edges;
+  const pages = (await getResouce(gatsbyUtilities, pageQuery)).allWpPage.edges;
+  // console.log(pages, posts)
+  // If there are no posts and pages in WordPress, don't do anything
+  if (!posts.length && !pages.length) {
     return
   }
 
   // If there are posts, create pages for them
   await createIndividualBlogPostPages({ posts, gatsbyUtilities })
+  await createIndividualPages({ pages, gatsbyUtilities })
+
 
   // And a paginated archive
   await createBlogPostArchive({ posts, gatsbyUtilities })
 }
+
+
+/**
+ * This function creates all the individual page pages in this site
+ */
+ const createIndividualPages = async ({ pages, gatsbyUtilities }) =>
+ Promise.all(
+  pages.map(({ node }) =>
+     gatsbyUtilities.actions.createPage({
+       path: node.uri,
+       component: path.resolve(`./src/templates/page-template.js`),
+       context: {
+         id: node.id,
+       },
+     })
+   )
+ )
+
 
 /**
  * This function creates all the individual blog pages in this site
@@ -129,38 +187,16 @@ async function createBlogPostArchive({ posts, gatsbyUtilities }) {
  * We're passing in the utilities we got from createPages.
  * So see https://www.gatsbyjs.com/docs/node-apis/#createPages for more info!
  */
-async function getPosts({ graphql, reporter }) {
-  const graphqlResult = await graphql(/* GraphQL */ `
-    query WpPosts {
-      # Query all WordPress blog posts sorted by date
-      allWpPost(sort: { fields: [date], order: DESC }) {
-        edges {
-          previous {
-            id
-          }
-
-          # note: this is a GraphQL alias. It renames "node" to "post" for this query
-          # We're doing this because this "node" is a post! It makes our code more readable further down the line.
-          post: node {
-            id
-            uri
-          }
-
-          next {
-            id
-          }
-        }
-      }
-    }
-  `)
+async function getResouce({ graphql, reporter }, query) {
+  const graphqlResult = await graphql(query)
 
   if (graphqlResult.errors) {
     reporter.panicOnBuild(
-      `There was an error loading your blog posts`,
+      `There was an error loading your resource posts`,
       graphqlResult.errors
     )
     return
   }
-
-  return graphqlResult.data.allWpPost.edges
+  return graphqlResult.data
+  // return graphqlResult.data.allWpPost.edges
 }
